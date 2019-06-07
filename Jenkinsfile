@@ -9,7 +9,7 @@ pipeline {
                 docker 'openjdk:8-jre'
             }
             environment {
-                scannerHome = tool 'SonarQubeScanner'
+                scannerHome = tool 'koala'
             }
             steps {
                 sh 'java -version'
