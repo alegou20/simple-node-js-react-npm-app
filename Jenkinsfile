@@ -8,9 +8,6 @@ pipeline {
             agent {
                 docker 'openjdk:8-jre'
             }
-            when {
-                branch 'development'
-            }
             environment {
                 scannerHome = tool 'SonarQubeScanner'
             }
@@ -24,65 +21,40 @@ pipeline {
                 }
             }
         }
-
         stage('Build') {
-            agent {
-                docker {
-                    image 'node:6-alpine'
-                }
-            }
-            steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Test') {
-            agent {
-                docker {
-                    image 'node:6-alpine'
-                }
-            }
-            when {
-                branch 'development'
-            }
-            steps {
-                sh './jenkins/scripts/test.sh'
-            }
-        }
-
-        stage('Deliver for development') {
             agent {
                 docker {
                     image 'node:6-alpine'
                     args '-p 3000:3000'
                 }
             }
-            when {
-                branch 'development'
-            }
             steps {
-                sh './jenkins/scripts/deliver-for-development.sh'
-                input message: 'Finished using the web site? (Click "Proceed" to continue)'
-                sh './jenkins/scripts/kill.sh'
+                sh 'npm install'
             }
         }
-
-        stage('Deploy for production') {
+        stage('Test') {
             agent {
                 docker {
                     image 'node:6-alpine'
-                    args '-p 5000:5000'
+                    args '-p 3000:3000'
                 }
             }
-            when {
-                branch 'production'
-            }
             steps {
-                sh './jenkins/scripts/deploy-for-production.sh'
-                input message: 'Finished using the web site? (Click "Proceed" to continue)'
-                sh './jenkins/scripts/kill.sh'
+                sh './jenkins/scripts/test.sh'
             }
         }
 
+        stage('Deliver') {
+            agent {
+                docker {
+                    image 'node:6-alpine'
+                    args '-p 3000:3000'
+                }
+            }
+            steps {
+                sh './jenkins/scripts/deliver.sh'
+                sh './jenkins/scripts/kill.sh'
+            }
+        }
     }
 }
